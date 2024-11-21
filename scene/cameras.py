@@ -16,6 +16,8 @@ from utils.graphics_utils import getWorld2View2, getProjectionMatrix
 
 class Camera(nn.Module):
     def __init__(self, colmap_id, R, T, FoVx, FoVy, bg, image_width, image, image_height, image_path,
+                 principal_point_x, principal_point_y,  # add by jiangp
+                 focal_length_x, focal_length_y,  # add by jiangp
                  image_name, uid, trans=np.array([0.0, 0.0, 0.0]), scale=1.0, 
                  timestep=None, data_device = "cuda"
                  ):
@@ -35,6 +37,11 @@ class Camera(nn.Module):
         self.image_name = image_name
         self.timestep = timestep
 
+        self.principal_point_x = principal_point_x  # add by jiangp
+        self.principal_point_y = principal_point_y  # add by jiangp
+        self.focal_length_x = focal_length_x  # add by jiangp
+        self.focal_length_y = focal_length_y  # add by jiangp
+
         self.zfar = 100.0
         self.znear = 0.01
 
@@ -42,7 +49,11 @@ class Camera(nn.Module):
         self.scale = scale
 
         self.world_view_transform = torch.tensor(getWorld2View2(R, T, trans, scale)).transpose(0, 1)  #.cuda()
-        self.projection_matrix = getProjectionMatrix(znear=self.znear, zfar=self.zfar, fovX=self.FoVx, fovY=self.FoVy).transpose(0,1)  #.cuda()
+        self.projection_matrix = getProjectionMatrix(znear=self.znear, zfar=self.zfar, fovX=self.FoVx, fovY=self.FoVy,
+                                                     focal_x=self.focal_length_x, focal_y=self.focal_length_y,   # add by jiangp
+                                                     cx=self.principal_point_x, cy=self.principal_point_y,   # add by jiangp
+                                                     width=self.image_width, height=self.image_height,  # add by jiangp
+                                                     ).transpose(0,1)  #.cuda()
         self.full_proj_transform = (self.world_view_transform.unsqueeze(0).bmm(self.projection_matrix.unsqueeze(0))).squeeze(0)
         self.camera_center = self.world_view_transform.inverse()[3, :3]
 

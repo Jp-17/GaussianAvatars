@@ -30,6 +30,10 @@ class CameraInfo(NamedTuple):
     T: np.array
     FovY: np.array
     FovX: np.array
+    principal_point_x: float    # add by jiangp
+    principal_point_y: float    # add by jiangp
+    focal_length_x: float   # add by jiangp
+    focal_length_y: float   # add by jiangp
     image: Optional[np.array]
     image_path: str
     image_name: str
@@ -228,11 +232,22 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
                 image = Image.fromarray(np.array(arr*255.0, dtype=np.byte), "RGB")
                 width, height = image.size
 
+            # change from OpenGL to COLMAP, because vhap/camera.py change the principal point, by jiangp
+            principal_point_x = frame['cx']
+            principal_point_y = height - frame['cy']
+            focal_length_x = frame['fl_x']
+            focal_length_y = frame['fl_y']
+
             if 'camera_angle_x' in frame:
                 fovx = frame["camera_angle_x"]
             else:
                 fovx = fovx_shared
-            fovy = focal2fov(fov2focal(fovx, width), height)
+
+            # here can directly use fovx and fovy offered by export function in vhap, by jiangp
+            if 'camera_angle_y' in frame:
+                fovy = frame["camera_angle_y"]
+            else:
+                fovy = focal2fov(fov2focal(fovx, width), height)
 
             timestep = frame["timestep_index"] if 'timestep_index' in frame else None
             camera_id = frame["camera_index"] if 'camera_id' in frame else None
@@ -241,6 +256,8 @@ def readCamerasFromTransforms(path, transformsfile, white_background, extension=
                 uid=idx, R=R, T=T, FovY=fovy, FovX=fovx, bg=bg, image=image, 
                 image_path=image_path, image_name=image_name, 
                 width=width, height=height, 
+                principal_point_x=principal_point_x, principal_point_y=principal_point_y,  # add by jiangp
+                focal_length_x=focal_length_x, focal_length_y=focal_length_y,  # add by jiangp
                 timestep=timestep, camera_id=camera_id))
     return cam_infos
 

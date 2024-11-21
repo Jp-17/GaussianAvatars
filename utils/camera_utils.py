@@ -42,6 +42,8 @@ def loadCam(args, id, cam_info, resolution_scale):
     return Camera(colmap_id=cam_info.uid, R=cam_info.R, T=cam_info.T, 
                   FoVx=cam_info.FovX, FoVy=cam_info.FovY, 
                   image_width=image_width, image_height=image_height,
+                  principal_point_x=cam_info.principal_point_x, principal_point_y=cam_info.principal_point_y,  # add by jiangp
+                  focal_length_x=cam_info.focal_length_x, focal_length_y=cam_info.focal_length_y,  # add by jiangp
                   bg=cam_info.bg, 
                   image=cam_info.image, 
                   image_path=cam_info.image_path,
